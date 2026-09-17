@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบเลือกรายวิชาและจัดภาระงานสอน - แผนกวิชาเทคโนโลยีคอมพิวเตอร์</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Kanit / Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Kanit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d9ebff',
+              500: '#1e60d5',
+              600: '#144bb8',
+              700: '#0f3894',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.125rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      .print-shadow-none {
+        box-shadow: none !important;
+      }
+      body {
+        background-color: #ffffff;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-3 text-center sm:text-left">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xl shadow-inner shrink-0">
+          <i class="fa-solid fa-chalkboard-user"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2 justify-center sm:justify-start">
+            ระบบเลือกรายวิชาและจัดภาระงานสอน
+            <span class="text-[11px] font-normal px-2 py-0.5 rounded-md bg-blue-500/30 text-blue-200 border border-blue-400/20">เทอม 2</span>
+          </h1>
+          <p class="text-[11px] text-slate-300">แผนกวิชาเทคโนโลยีคอมพิวเตอร์ วิทยาลัยเทคนิคอุดรธานี</p>
+        </div>
+      </div>
+
+      <!-- Quick Action & View Switching Buttons -->
+      <div class="flex items-center gap-2 no-print flex-wrap justify-center">
+        <div class="inline-flex p-1 bg-slate-800/80 rounded-xl border border-slate-700 mr-1">
+          <button onclick="switchView('workspace')" id="viewWorkspaceBtn" class="px-3.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-chalkboard"></i>
+            <span>จัดตารางสอน</span>
+          </button>
+          <button onclick="switchView('summary')" id="viewSummaryBtn" class="px-3.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list"></i>
+            <span>ตารางสรุปข้อมูล</span>
+          </button>
+        </div>
+        <button onclick="openTeacherModal()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-user-plus"></i>
+          <span>จัดการครูผู้สอน (<span id="teacherCountBadge">11</span>)</span>
+        </button>
+        <button onclick="exportToExcel()" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i>
+          <span>ส่งออก Excel</span>
+        </button>
+        <button onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-print"></i>
+          <span>พิมพ์รายงาน</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+    <!-- 1. WORKSPACE VIEW (หน้าจัดตารางสอน) -->
+    <div id="workspaceView" class="space-y-5">
+      
+      <!-- TOP ZONE: Filter Bar, Level Selector & Group Selector (ด้านบนสุดเป็นแถบเลือก ระดับชั้น และสาขาวิชา) -->
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <!-- Branch Selector Tabs (แถบเลือกสาขาวิชา) -->
+        <div class="p-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-layer-group text-blue-400"></i> เลือกสาขาวิชาที่ต้องการดู:
+            </span>
+            <span class="text-[11px] text-slate-400">คลิกเพื่อกรองรายวิชาตามสาขาและระดับชั้น</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="branchBtnContainer">
+            <button onclick="selectBranch('ALL')" id="branchBtn-ALL" class="branch-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow transition">
+              <i class="fa-solid fa-border-all mr-1.5"></i>ทุกสาขาวิชา (84 วิชา)
+            </button>
+            <button onclick="selectBranch('ช่างเทคนิคคอมพิวเตอร์')" id="branchBtn-ช่างเทคนิคคอมพิวเตอร์" class="branch-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+              <i class="fa-solid fa-microchip mr-1.5 text-sky-400"></i>ช่างเทคนิคคอมพิวเตอร์ ปวช. (30 วิชา / 2 กลุ่ม)
+            </button>
+            <button onclick="selectBranch('เทคโนโลยีคอมพิวเตอร์')" id="branchBtn-เทคโนโลยีคอมพิวเตอร์" class="branch-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+              <i class="fa-solid fa-network-wired mr-1.5 text-emerald-400"></i>เทคโนโลยีคอมพิวเตอร์ ปวส. (33 วิชา)
+            </button>
+            <button onclick="selectBranch('คอมเกมและแอนิเมชัน')" id="branchBtn-คอมเกมและแอนิเมชัน" class="branch-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+              <i class="fa-solid fa-gamepad mr-1.5 text-amber-400"></i>คอมเกมและแอนิเมชัน ปวส. (11 วิชา)
+            </button>
+            <button onclick="selectBranch('การถ่ายภาพและมัลติมีเดีย')" id="branchBtn-การถ่ายภาพและมัลติมีเดีย" class="branch-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+              <i class="fa-solid fa-camera mr-1.5 text-pink-400"></i>การถ่ายภาพและมัลติมีเดีย ปวส. (10 วิชา)
+            </button>
+          </div>
+
+          <!-- Level Filter Pills (แถบเลือกระดับชั้น) -->
+          <div class="pt-2 border-t border-slate-700/60">
+            <div class="text-[11px] font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-graduation-cap text-indigo-300"></i> เลือกระดับชั้น:
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="levelBtnContainer">
+              <!-- Dynamic Level buttons generated based on selected branch -->
+            </div>
+          </div>
+
+          <!-- Group Filter Pills (ตัวเลือกกลุ่มเรียน 1 / 2 สำหรับ ปวช.) -->
+          <div id="groupFilterWrapper" class="pt-2 border-t border-slate-700/80 hidden transition-all duration-200">
+            <div class="text-[11px] font-semibold text-amber-300 mb-1.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-users-rectangle text-amber-400"></i> เลือกกลุ่มเรียนสำหรับระดับ ปวช.:
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="groupBtnContainer">
+              <button onclick="selectGroup('ALL')" id="groupBtn-ALL" class="group-filter-btn px-3 py-1 rounded-lg text-xs font-semibold transition bg-amber-500 text-slate-950 shadow">
+                <i class="fa-solid fa-layer-group mr-1"></i> ทุกกลุ่มเรียน (กลุ่ม 1 + 2)
+              </button>
+              <button onclick="selectGroup('1')" id="groupBtn-1" class="group-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-1 mr-1"></i> กลุ่ม 1 (ห้อง 1)
+              </button>
+              <button onclick="selectGroup('2')" id="groupBtn-2" class="group-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition">
+                <i class="fa-solid fa-2 mr-1"></i> กลุ่ม 2 (ห้อง 2)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compact KPI Mini Summary Bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-200 bg-slate-50 text-xs">
+          <div class="p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-500 block">วิชาทั้งหมด</span>
+              <span class="text-sm font-bold text-slate-800"><span id="statTotalCourses">84</span> วิชา</span>
+            </div>
+          </div>
+          <div class="p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-500 block">ชั่วโมงรวม</span>
+              <span class="text-sm font-bold text-amber-600"><span id="statTotalHours">308</span> ชม.</span>
+              <span class="text-[10px] text-slate-400 block" id="statLevelBreakdown">ปวช. 128 ชม. | ปวส. 180 ชม.</span>
+            </div>
+          </div>
+          <div class="p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-500 block">เลือกผู้สอนแล้ว</span>
+              <span class="text-sm font-bold text-emerald-600"><span id="statAssignedCourses">0</span> วิชา</span>
+              <span class="text-[10px] text-emerald-600 block" id="statAssignedHours">0 ชม. (0%)</span>
+            </div>
+          </div>
+          <div class="p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-500 block">ยังไม่มีผู้สอน</span>
+              <span class="text-sm font-bold text-rose-600"><span id="statUnassignedCourses">84</span> วิชา</span>
+              <span class="text-[10px] text-rose-500 block" id="statUnassignedHours">308 ชม. เหลือจัด</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2-COLUMN WORKSPACE: LEFT (ข้อมูลครูผู้สอน) & RIGHT (รายวิชาที่ต้องการเลือก) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- ด้านซ้ายมือ: แผงข้อมูลครูผู้สอนทั้ง 11 ท่าน พร้อมปุ่มดูวิชาที่สอน -->
+        <aside class="lg:col-span-4 xl:col-span-4 space-y-3.5">
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 sticky top-20">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-scale-balanced text-blue-600"></i>
+                  ภาระงานสอนรายบุคคล
+                </h2>
+                <p class="text-[11px] text-slate-500">ครู 11 ท่าน (เป้าหมาย 28 ชม./ท่าน)</p>
+              </div>
+              <button onclick="openTeacherModal()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1" title="จัดการครูผู้สอน">
+                <i class="fa-solid fa-gear"></i> จัดการ
+              </button>
+            </div>
+
+            <!-- Filter hint tag -->
+            <div class="mt-2.5 mb-1 flex items-center justify-between text-[11px] text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
+              <span>คลิก <strong class="text-blue-600">"ดูวิชาที่สอน"</strong> เพื่อกรองเฉพาะวิชา</span>
+              <button onclick="clearTeacherFilter()" class="text-blue-600 hover:underline">แสดงทั้งหมด</button>
+            </div>
+
+            <!-- Teachers Load List Container (Compact scrollable list) -->
+            <div id="teacherLoadContainer" class="space-y-2.5 mt-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
+              <!-- Dynamic Teacher Cards populated by JS -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- โซนขวามือ: ตารางเลือกและมอบหมายรายวิชา พร้อมระบบค้นหาและตัวกรองสถานะ -->
+        <section class="lg:col-span-8 xl:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <!-- Search and Quick Filter Bar -->
+          <div class="p-3.5 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+            <div class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center flex-1">
+              <!-- Search box -->
+              <div class="relative flex-1 min-w-[200px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="renderCoursesTable()" placeholder="ค้นหารหัสวิชา หรือ ชื่อวิชา..." class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              </div>
+
+              <!-- Filter Assignment Status -->
+              <select id="statusFilter" onchange="renderCoursesTable()" class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="ALL">ทุกสถานะการเลือก</option>
+                <option value="UNASSIGNED">เฉพาะวิชาที่ยังไม่มีผู้สอน</option>
+                <option value="ASSIGNED">เฉพาะวิชาที่มีผู้สอนแล้ว</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2 justify-between sm:justify-end shrink-0">
+              <span class="text-xs text-slate-500">พบ: <strong id="filterMatchCount" class="text-blue-600">84</strong> วิชา</span>
+              <button onclick="resetAllAssignmentsPrompt()" class="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-medium transition" title="ล้างการเลือกทั้งหมด">
+                <i class="fa-solid fa-arrow-rotate-left mr-1"></i> รีเซ็ต
+              </button>
+            </div>
+          </div>
+
+          <!-- Table of Courses to select (โซนขวามือ) -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600 border-collapse">
+              <thead class="bg-slate-100/90 text-slate-700 text-xs uppercase tracking-wider font-semibold border-b border-slate-200 sticky top-0 z-10">
+                <tr>
+                  <th scope="col" class="py-3 px-3 text-center w-10">#</th>
+                  <th scope="col" class="py-3 px-3">ระดับชั้น / กลุ่ม</th>
+                  <th scope="col" class="py-3 px-3 w-28">รหัสวิชา</th>
+                  <th scope="col" class="py-3 px-3">ชื่อวิชา</th>
+                  <th scope="col" class="py-3 px-2 text-center w-16" title="ทฤษฎี - ปฏิบัติ - หน่วยกิต">ท-ป-น</th>
+                  <th scope="col" class="py-3 px-2 text-center w-16">ชม.</th>
+                  <th scope="col" class="py-3 px-3 text-center w-24">กลุ่มวิชา</th>
+                  <th scope="col" class="py-3 px-3 w-56">ครูผู้สอนที่รับผิดชอบ</th>
+                  <th scope="col" class="py-3 px-2 text-center w-12">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="courseTableBody" class="divide-y divide-slate-100">
+                <!-- Dynamic rows rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- 2. SUMMARY TABLE VIEW (หน้าตารางสรุปข้อมูล: ตัดกล่องสถิติภาระงานด้านบนออก เหลือเฉพาะแถบหัวข้อ ตัวกรอง และตารางสรุป) -->
+    <section id="summaryView" class="hidden space-y-5">
+      <!-- Summary Header Bar -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-blue-600"></i>
+            ตารางสรุปข้อมูลรายวิชาครูผู้สอนรายบุคคล
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            สรุปรายชื่อครูผู้สอน จำนวนรายวิชา รหัสรายวิชา ชื่อรายวิชา และระดับชั้น
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap no-print">
+          <!-- Filter specific teacher in summary table -->
+          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <label class="font-medium">กรองรายชื่อ:</label>
+            <select id="summaryTeacherFilter" onchange="renderSummaryTable()" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-medium focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">ครูผู้สอนทุกคน (11 ท่าน)</option>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <button onclick="window.print()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-print"></i> พิมพ์รายงาน
+          </button>
+          <button onclick="exportToExcel()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-file-excel"></i> ส่งออก Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Summary Table Container -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700 border-collapse">
+            <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider font-semibold">
+              <tr>
+                <th scope="col" class="py-3.5 px-3 text-center w-12 border-r border-slate-800">#</th>
+                <th scope="col" class="py-3.5 px-4 w-48 border-r border-slate-800">ชื่อครูผู้สอน</th>
+                <th scope="col" class="py-3.5 px-3 text-center w-28 border-r border-slate-800">จำนวนรายวิชา</th>
+                <th scope="col" class="py-3.5 px-3 w-32 border-r border-slate-800">รหัสรายวิชา</th>
+                <th scope="col" class="py-3.5 px-4 border-r border-slate-800">ชื่อรายวิชา</th>
+                <th scope="col" class="py-3.5 px-4 w-60 border-r border-slate-800">ระดับชั้น / กลุ่ม</th>
+                <th scope="col" class="py-3.5 px-2 text-center w-16 border-r border-slate-800">ท-ป-น</th>
+                <th scope="col" class="py-3.5 px-2 text-center w-16">ชม.</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody" class="divide-y divide-slate-200 text-xs sm:text-sm">
+              <!-- Dynamic rows rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Teacher Management -->
+  <div id="teacherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-fadeIn">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">จัดการรายชื่อครูผู้สอนในแผนก</h3>
+            <p class="text-xs text-slate-500">เพิ่ม ลบ หรือแก้ไขชั่วโมงเป้าหมายในการสอน</p>
+          </div>
+        </div>
+        <button onclick="closeTeacherModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Form to add teacher + List) -->
+      <div class="p-5 overflow-y-auto space-y-5 flex-1">
+        <!-- Add Teacher Form -->
+        <div class="bg-blue-50/60 rounded-2xl p-4 border border-blue-100 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wide text-blue-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-plus text-blue-600"></i> เพิ่มข้อมูลครูผู้สอนใหม่
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <div class="sm:col-span-6">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">ชื่อ - สกุล ครูผู้สอน <span class="text-rose-500">*</span></label>
+              <input type="text" id="newTeacherName" placeholder="เช่น อ.สมชาย ใจดี" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">เป้าหมาย (ชม.)</label>
+              <input type="number" id="newTeacherTarget" value="28" min="1" max="40" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            </div>
+            <div class="sm:col-span-3 flex items-end">
+              <button onclick="addNewTeacher()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+                <i class="fa-solid fa-plus mr-1"></i> เพิ่ม
+              </button>
+            </div>
+            <div class="sm:col-span-12">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">ความเชี่ยวชาญ / หมายเหตุ (ถ้ามี)</label>
+              <input type="text" id="newTeacherExpertise" placeholder="เช่น เครือข่าย, IoT, หุ่นยนต์, กราฟิก, พัฒนาเว็บ" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Teachers Table / List -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">รายชื่อครูในระบบปัจจุบัน</h4>
+            <button onclick="loadSampleTeachers()" class="text-xs text-blue-600 hover:underline">
+              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>ใส่รายชื่อตัวอย่างจำลอง
+            </button>
+          </div>
+          <div class="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100 max-h-60 overflow-y-auto" id="teachersModalList">
+            <!-- Dynamic Teacher list items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+        <button onclick="closeTeacherModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal (No browser alert) -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 text-center shadow-2xl space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-800 text-base" id="confirmModalTitle">ยืนยันการดำเนินการ</h3>
+        <p class="text-xs text-slate-500 mt-1" id="confirmModalDesc">คุณแน่ใจหรือไม่ที่ต้องการดำเนินการนี้?</p>
+      </div>
+      <div class="flex gap-2 justify-center pt-2">
+        <button onclick="closeConfirmModal(false)" class="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">
+          ยกเลิก
+        </button>
+        <button id="confirmModalBtnAction" onclick="closeConfirmModal(true)" class="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold transition">
+          ยืนยัน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700/50">
+      <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+      <span id="toastMessage">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+    </div>
+  </div>
+
+  <script>
+    // ฐานข้อมูลรายวิชาทั้งหมด 84 รายวิชา (รวม ปวช. 2 กลุ่มเรียน และวิชากฎหมายตามแผนการเรียน)
+    const initialCourses = [
+      // ปวช.1 ช่างเทคนิคคอมพิวเตอร์ เทอม 2 - กลุ่ม 1 (7 วิชา, 28 ชม.)
+      { id: 1, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-1002", name: "อุปกรณ์อิเล็กทรอนิกส์และวงจร", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 2, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-1007", name: "การใช้งานระบบปฏิบัติการ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 3, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-1010", name: "เขียนแบบอิเล็กทรอนิกส์ด้วยคอมพิวเตอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 4, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-2004", name: "ไมโครคอนโทรลเลอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 5, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-2009", name: "การใช้งานแอปพลิเคชันปัญญาประดิษฐ์เบื้องต้น", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 6, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-2010", name: "โปรแกรมเชิงวัตถุ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 7, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 2, code: "21909-2014", name: "พื้นฐานการใช้งานระบบปฏิบัติการลีนุกซ์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+
+      // ปวช.1 ช่างเทคนิคคอมพิวเตอร์ เทอม 2 - กลุ่ม 2 (7 วิชา, 28 ชม.)
+      { id: 8, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-1002", name: "อุปกรณ์อิเล็กทรอนิกส์และวงจร", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 9, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-1007", name: "การใช้งานระบบปฏิบัติการ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 10, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-1010", name: "เขียนแบบอิเล็กทรอนิกส์ด้วยคอมพิวเตอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 11, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-2004", name: "ไมโครคอนโทรลเลอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 12, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-2009", name: "การใช้งานแอปพลิเคชันปัญญาประดิษฐ์เบื้องต้น", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 13, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-2010", name: "โปรแกรมเชิงวัตถุ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 14, level: "ปวช.1 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 2, code: "21909-2014", name: "พื้นฐานการใช้งานระบบปฏิบัติการลีนุกซ์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+
+      // ปวช.2 ช่างเทคนิคคอมพิวเตอร์ เทอม 4 - กลุ่ม 1 (7 วิชา, 30 ชม.)
+      { id: 15, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21909-1003", name: "พื้นฐานอิเล็กทรอนิกส์อัจฉริยะ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 16, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21909-2008", name: "พื้นฐานการออกแบบส่วนต่อประสานกับผู้ใช้", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 17, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21909-2011", name: "การเขียนโปรแกรมประยุกต์บนอุปกรณ์พกพา", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 18, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21909-2013", name: "การใช้งานโปรแกรมระบบเครือข่ายคอมพิวเตอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 19, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21909-2015", name: "การตัดต่อระบบเสียงและภาพด้วยปัญญาประดิษฐ์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 20, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21606-2013", name: "ผลิตหนังสั้น", t: 1, p: 4, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 21, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 4, code: "21608-2015", name: "การสร้างงานโมชั่นกราฟิก", t: 1, p: 4, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+
+      // ปวช.2 ช่างเทคนิคคอมพิวเตอร์ เทอม 4 - กลุ่ม 2 (7 วิชา, 30 ชม.)
+      { id: 22, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21909-1003", name: "พื้นฐานอิเล็กทรอนิกส์อัจฉริยะ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 23, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21909-2008", name: "พื้นฐานการออกแบบส่วนต่อประสานกับผู้ใช้", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 24, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21909-2011", name: "การเขียนโปรแกรมประยุกต์บนอุปกรณ์พกพา", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 25, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21909-2013", name: "การใช้งานโปรแกรมระบบเครือข่ายคอมพิวเตอร์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 26, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21909-2015", name: "การตัดต่อระบบเสียงและภาพด้วยปัญญาประดิษฐ์", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 27, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21606-2013", name: "ผลิตหนังสั้น", t: 1, p: 4, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 28, level: "ปวช.2 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 4, code: "21608-2015", name: "การสร้างงานโมชั่นกราฟิก", t: 1, p: 4, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+
+      // ปวช.3 ช่างเทคนิคคอมพิวเตอร์ เทอม 6 - กลุ่ม 1 & 2 (ตามแผนการเรียน ชค.-67: งานบริการระบบคอมพิวเตอร์และ IoT)
+      { id: 29, level: "ปวช.3 ช่างเทคนิคคอมพิวเตอร์", group: 1, term: 6, code: "21909-2021", name: "งานบริการระบบคอมพิวเตอร์และ IoT", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 30, level: "ปวช.3 ช่างเทคนิคคอมพิวเตอร์", group: 2, term: 6, code: "21909-2021", name: "งานบริการระบบคอมพิวเตอร์และ IoT", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+
+      // ปวส.1 เทคโนโลยีคอมพิวเตอร์ ปกติ เทอม 2 (8 วิชา, 36 ชม.)
+      { id: 83, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31900-1001", name: "กฎหมายในงานอาชีพอุตสาหกรรมดิจิทัลและเทคโนโลยีสารสนเทศ", t: 1, p: 0, c: 1, hours: 1, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 31, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-1002", name: "เทคโนโลยี IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 32, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-2003", name: "การพัฒนางานระบบสมองกลฝังตัวและ IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 33, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-2005", name: "การออกแบบและการจัดการเครือข่ายในองค์กร", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 34, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-2006", name: "การเรียนรู้ของเครื่องจักรเบื้องต้น", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 35, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-2007", name: "การประมวลผลภาพดิจิตอล", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 36, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31909-2009", name: "การพัฒนาเว็บแอปพลิเคชัน", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 37, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 2, code: "31608-2001", name: "การออกแบบกราฟิกดิจิทัล", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+
+      // ปวส.1 เทคโนโลยีคอมพิวเตอร์ ม.6 เทอม 2 (10 วิชา, 46 ชม.)
+      { id: 84, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31900-1001", name: "กฎหมายในงานอาชีพอุตสาหกรรมดิจิทัลและเทคโนโลยีสารสนเทศ", t: 1, p: 0, c: 1, hours: 1, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 38, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-2003", name: "การพัฒนางานระบบสมองกลฝังตัวและ IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 39, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-2005", name: "การออกแบบและการจัดการเครือข่ายในองค์กร", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 40, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-2006", name: "การเรียนรู้ของเครื่องจักรเบื้องต้น", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 41, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-2007", name: "การประมวลผลภาพดิจิตอล", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 42, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-2009", name: "การพัฒนาเว็บแอปพลิเคชัน", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 43, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31608-2001", name: "การออกแบบกราฟิกดิจิทัล", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 44, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-0001", name: "พื้นฐานวงจรอิเล็กทรอนิกส์และการออกแบบ", t: 2, p: 3, c: 3, hours: 5, category: "ปรับพื้นฐาน", teacherId: null },
+      { id: 45, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-0004", name: "การเขียนโปรแกรมคอมพิวเตอร์", t: 2, p: 3, c: 3, hours: 5, category: "ปรับพื้นฐาน", teacherId: null },
+      { id: 46, level: "ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 2, code: "31909-0005", name: "ระบบคอมพิวเตอร์และระบบเครือข่ายเบื้องต้น", t: 2, p: 3, c: 3, hours: 5, category: "ปรับพื้นฐาน", teacherId: null },
+
+      // ปวส.2 เทคโนโลยีคอมพิวเตอร์ ปกติ เทอม 4 (7 วิชา, 42 ชม.)
+      { id: 47, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-1005", name: "การวิเคราะห์และออกแบบระบบ", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 48, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-1006", name: "โปรแกรมโครงสร้าง", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 49, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-1008", name: "ระบบเครือข่ายสำหรับงาน IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 50, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-2004", name: "ระบบปัญญาประดิษฐ์เบื้องต้น", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 51, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-2008", name: "ระบบปฏิบัติการหุ่นยนต์", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 52, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31909-2011", name: "โครงงานด้านเทคโนโลยีคอมพิวเตอร์", t: 0, p: 12, c: 4, hours: 12, category: "โครงงาน", teacherId: null },
+      { id: 53, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)", group: null, term: 4, code: "31608-2003", name: "วีดิโอคอนเทนต์", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+
+      // ปวส.2 เทคโนโลยีคอมพิวเตอร์ ม.6 เทอม 4 (8 วิชา, 47 ชม.)
+      { id: 54, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-1002", name: "เทคโนโลยี IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 55, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-1005", name: "การวิเคราะห์และออกแบบระบบ", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 56, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-1006", name: "โปรแกรมโครงสร้าง", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 57, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-1008", name: "ระบบเครือข่ายสำหรับงาน IoT", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 58, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-2004", name: "ระบบปัญญาประดิษฐ์เบื้องต้น", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 59, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-2008", name: "ระบบปฏิบัติการหุ่นยนต์", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 60, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31909-2011", name: "โครงงานด้านเทคโนโลยีคอมพิวเตอร์", t: 0, p: 12, c: 4, hours: 12, category: "โครงงาน", teacherId: null },
+      { id: 61, level: "ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)", group: null, term: 4, code: "31608-2003", name: "วีดิโอคอนเทนต์", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+
+      // ปวส.1 คอมเกมและแอนิเมชัน เทอม 2 (9 วิชา, 38 ชม.)
+      { id: 85, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31900-1001", name: "กฎหมายในงานอาชีพอุตสาหกรรมดิจิทัลและเทคโนโลยีสารสนเทศ", t: 1, p: 0, c: 1, hours: 1, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 62, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31905-2004", name: "การพัฒนาแนวความคิดในการออกแบบ", t: 2, p: 2, c: 3, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 63, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31905-2007", name: "การสร้างแอนิเมชัน", t: 1, p: 4, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 64, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31905-2009", name: "การจัดทำเอกสารการออกแบบเกม", t: 2, p: 2, c: 3, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 65, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31905-2010", name: "การผลิตเกมคอมพิวเตอร์", t: 1, p: 4, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 66, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31905-2014", name: "การออกแบบและสร้างภาพเคลื่อนไหว 3 มิติ", t: 1, p: 3, c: 2, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 67, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31608-2001", name: "การออกแบบกราฟิกดิจิทัล", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 68, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31900-0003", name: "ระบบฐานข้อมูลและการประยุกต์", t: 1, p: 4, c: 3, hours: 5, category: "ปรับพื้นฐาน", teacherId: null },
+      { id: 69, level: "ปวส.1 คอมเกมและแอนิเมชัน", group: null, term: 2, code: "31900-0007", name: "การสร้างภาพเคลื่อนไหว", t: 1, p: 4, c: 3, hours: 5, category: "ปรับพื้นฐาน", teacherId: null },
+
+      // ปวส.2 คอมเกมและแอนิเมชัน เทอม 4 (2 วิชา, 8 ชม.)
+      { id: 70, level: "ปวส.2 คอมเกมและแอนิเมชัน", group: null, term: 4, code: "31905-2003", name: "การวางแผนและควบคุมการผลิตแอนิเมชัน", t: 2, p: 2, c: 3, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 71, level: "ปวส.2 คอมเกมและแอนิเมชัน", group: null, term: 4, code: "31905-2015", name: "การออกแบบมัลติมีเดียเชิงปฏิสัมพันธ์", t: 2, p: 2, c: 3, hours: 4, category: "วิชาชีพเฉพาะ", teacherId: null },
+
+      // ปวส.1 การถ่ายภาพและมัลติมีเดีย เทอม 2 (8 วิชา, 34 ชม.)
+      { id: 86, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31600-1001", name: "กฎหมายในงานอาชีพศิลปะและการออกแบบ", t: 1, p: 0, c: 1, hours: 1, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 72, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31600-1005", name: "แนวคิดและการสร้างสรรค์ศิลปกรรม", t: 2, p: 2, c: 3, hours: 4, category: "วิชาชีพพื้นฐาน", teacherId: null },
+      { id: 73, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31606-2003", name: "การจัดแสงเพื่องานถ่ายภาพและงานมัลติมีเดีย", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 74, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31606-2007", name: "การเขียนบทภาพยนตร์", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 75, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31606-2014", name: "การออกแบบสร้างตัวละคร", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 76, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31608-2001", name: "การออกแบบกราฟิกดิจิทัล", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 77, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31608-2003", name: "วีดิโอคอนเทนต์", t: 2, p: 3, c: 3, hours: 5, category: "เลือกเสรี", teacherId: null },
+      { id: 78, level: "ปวส.1 การถ่ายภาพและมัลติมีเดีย", group: null, term: 2, code: "31600-0002", name: "การวาดเขียน", t: 2, p: 2, c: 3, hours: 4, category: "ปรับพื้นฐาน", teacherId: null },
+
+      // ปวส.2 การถ่ายภาพและมัลติมีเดีย เทอม 4 (2 วิชา, 10 ชม.)
+      { id: 79, level: "ปวส.2 การถ่ายภาพและมัลติมีเดีย", group: null, term: 4, code: "31606-2009", name: "การผลิตงานดิจิทัลคอนเทนต์", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null },
+      { id: 80, level: "ปวส.2 การถ่ายภาพและมัลติมีเดีย", group: null, term: 4, code: "31606-2012", name: "ดิจิทัลพอร์ตโฟลิโอ", t: 2, p: 3, c: 3, hours: 5, category: "วิชาชีพเฉพาะ", teacherId: null }
+    ];
+
+    // รายชื่อครูผู้สอนทั้ง 11 ท่านในแผนก (เป้าหมาย 28 ชม./ท่าน)
+    let teachers = [
+      { id: 'T1', name: 'อ.สมศักดิ์', targetHours: 28, expertise: 'เทคโนโลยีคอมพิวเตอร์ / ฮาร์ดแวร์' },
+      { id: 'T2', name: 'อ.ราเชน', targetHours: 28, expertise: 'ระบบเครือข่าย / IoT' },
+      { id: 'T3', name: 'อ.อภิชิต', targetHours: 28, expertise: 'การเขียนโปรแกรม / AI' },
+      { id: 'T4', name: 'อ.วัฒนา', targetHours: 28, expertise: 'ระบบปฏิบัติการ / Linux / Server' },
+      { id: 'T5', name: 'อ.เนตรนภา', targetHours: 28, expertise: 'การพัฒนาเว็บ / ฐานข้อมูล' },
+      { id: 'T6', name: 'อ.ลลิตา', targetHours: 28, expertise: 'คอมพิวเตอร์กราฟิก / มัลติมีเดีย' },
+      { id: 'T7', name: 'อ.ทัศนัย', targetHours: 28, expertise: 'ไมโครคอนโทรลเลอร์ / สมองกลฝังตัว' },
+      { id: 'T8', name: 'อ.นัฐอนันต์', targetHours: 28, expertise: 'คอมเกมและแอนิเมชัน / 3D' },
+      { id: 'T9', name: 'อ.พีรภัทร', targetHours: 28, expertise: 'การถ่ายภาพ / วิดีโอคอนเทนต์' },
+      { id: 'T10', name: 'อ.อรปรียา', targetHours: 28, expertise: 'การออกแบบศิลปกรรม / โมชั่นกราฟิก' },
+      { id: 'T11', name: 'อ.อิทธพล', targetHours: 28, expertise: 'หุ่นยนต์ / งานบริการคอมพิวเตอร์' }
+    ];
+
+    // โครงสร้างระดับชั้นแยกตามสาขาวิชา
+    const branchLevelMap = {
+      'ALL': [
+        'ปวช.1 ช่างเทคนิคคอมพิวเตอร์', 'ปวช.2 ช่างเทคนิคคอมพิวเตอร์', 'ปวช.3 ช่างเทคนิคคอมพิวเตอร์',
+        'ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)', 'ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)',
+        'ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)', 'ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)',
+        'ปวส.1 คอมเกมและแอนิเมชัน', 'ปวส.2 คอมเกมและแอนิเมชัน',
+        'ปวส.1 การถ่ายภาพและมัลติมีเดีย', 'ปวส.2 การถ่ายภาพและมัลติมีเดีย'
+      ],
+      'ช่างเทคนิคคอมพิวเตอร์': [
+        'ปวช.1 ช่างเทคนิคคอมพิวเตอร์',
+        'ปวช.2 ช่างเทคนิคคอมพิวเตอร์',
+        'ปวช.3 ช่างเทคนิคคอมพิวเตอร์'
+      ],
+      'เทคโนโลยีคอมพิวเตอร์': [
+        'ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ปกติ)',
+        'ปวส.1 เทคโนโลยีคอมพิวเตอร์ (ม.6)',
+        'ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ปกติ)',
+        'ปวส.2 เทคโนโลยีคอมพิวเตอร์ (ม.6)'
+      ],
+      'คอมเกมและแอนิเมชัน': [
+        'ปวส.1 คอมเกมและแอนิเมชัน',
+        'ปวส.2 คอมเกมและแอนิเมชัน'
+      ],
+      'การถ่ายภาพและมัลติมีเดีย': [
+        'ปวส.1 การถ่ายภาพและมัลติมีเดีย',
+        'ปวส.2 การถ่ายภาพและมัลติมีเดีย'
+      ]
+    };
+
+    let selectedBranch = 'ALL';
+    let selectedLevel = 'ALL';
+    let selectedGroup = 'ALL'; // 'ALL', '1', '2'
+    let filterTeacherId = 'ALL';
+    let currentView = 'workspace'; // 'workspace' or 'summary'
+    let courses = JSON.parse(JSON.stringify(initialCourses));
+    let pendingConfirmAction = null;
+
+    window.onload = function() {
+      renderLevelButtons();
+      updateGroupFilterVisibility();
+      populateSummaryTeacherFilter();
+      updateAllViews();
+    };
+
+    // สลับหน้าระหว่าง Workspace (จัดตารางสอน) และ Summary (ตารางสรุปข้อมูล)
+    function switchView(viewName) {
+      currentView = viewName;
+      const workspaceEl = document.getElementById('workspaceView');
+      const summaryEl = document.getElementById('summaryView');
+      const btnWorkspace = document.getElementById('viewWorkspaceBtn');
+      const btnSummary = document.getElementById('viewSummaryBtn');
+
+      if (viewName === 'workspace') {
+        workspaceEl.classList.remove('hidden');
+        summaryEl.classList.add('hidden');
+        btnWorkspace.className = "px-3.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow transition flex items-center gap-1.5";
+        btnSummary.className = "px-3.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5";
+      } else {
+        workspaceEl.classList.add('hidden');
+        summaryEl.classList.remove('hidden');
+        btnWorkspace.className = "px-3.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5";
+        btnSummary.className = "px-3.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow transition flex items-center gap-1.5";
+        renderSummaryTable();
+      }
+    }
+
+    function populateSummaryTeacherFilter() {
+      const select = document.getElementById('summaryTeacherFilter');
+      if (!select) return;
+      const currentVal = select.value;
+      select.innerHTML = '<option value="ALL">ครูผู้สอนทุกคน (11 ท่าน)</option>';
+      teachers.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.innerText = t.name;
+        select.appendChild(opt);
+      });
+      if (currentVal) select.value = currentVal;
+    }
+
+    function selectBranch(branchKey) {
+      selectedBranch = branchKey;
+      selectedLevel = 'ALL';
+      document.querySelectorAll('.branch-btn').forEach(btn => {
+        btn.className = "branch-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition";
+      });
+      const activeBtn = document.getElementById(`branchBtn-${branchKey}`);
+      if (activeBtn) {
+        activeBtn.className = "branch-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow transition";
+      }
+      renderLevelButtons();
+      updateGroupFilterVisibility();
+      renderCoursesTable();
+    }
+
+    function selectLevel(levelName) {
+      selectedLevel = levelName;
+      selectedGroup = 'ALL'; // รีเซ็ตกลุ่มเรียนเมื่อเปลี่ยนระดับชั้น
+      renderLevelButtons();
+      updateGroupFilterVisibility();
+      renderCoursesTable();
+    }
+
+    function selectGroup(groupKey) {
+      selectedGroup = groupKey;
+      document.querySelectorAll('.group-filter-btn').forEach(btn => {
+        btn.className = "group-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition";
+      });
+      const activeBtn = document.getElementById(`groupBtn-${groupKey}`);
+      if (activeBtn) {
+        activeBtn.className = "group-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 shadow transition";
+      }
+      renderCoursesTable();
+    }
+
+    function updateGroupFilterVisibility() {
+      const groupWrapper = document.getElementById('groupFilterWrapper');
+      const isPvcActive = (selectedBranch === 'ช่างเทคนิคคอมพิวเตอร์') || (selectedLevel.includes('ปวช'));
+      if (isPvcActive) {
+        groupWrapper.classList.remove('hidden');
+      } else {
+        groupWrapper.classList.add('hidden');
+        selectedGroup = 'ALL';
+      }
+    }
+
+    function renderLevelButtons() {
+      const container = document.getElementById('levelBtnContainer');
+      container.innerHTML = '';
+
+      const levels = branchLevelMap[selectedBranch] || branchLevelMap['ALL'];
+
+      // ปุ่มเลือก "ทุกระดับชั้นในกลุ่มนี้"
+      const allBtn = document.createElement('button');
+      const isAllActive = selectedLevel === 'ALL';
+      allBtn.className = `px-3 py-1 rounded-lg text-xs font-medium transition ${isAllActive ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700'}`;
+      allBtn.innerText = 'ทุกระดับชั้นในกลุ่มนี้';
+      allBtn.onclick = () => selectLevel('ALL');
+      container.appendChild(allBtn);
+
+      levels.forEach(lvl => {
+        const btn = document.createElement('button');
+        const isActive = selectedLevel === lvl;
+        btn.className = `px-3 py-1 rounded-lg text-xs font-medium transition ${isActive ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700'}`;
+        btn.innerText = lvl;
+        btn.onclick = () => selectLevel(lvl);
+        container.appendChild(btn);
+      });
+    }
+
+    function renderCoursesTable() {
+      const tbody = document.getElementById('courseTableBody');
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = courses.filter(c => {
+        // ค้นหาตามรหัสหรือชื่อวิชา
+        const matchSearch = c.code.toLowerCase().includes(search) || c.name.toLowerCase().includes(search);
+        
+        // กรองตามสาขาวิชา
+        let matchBranch = true;
+        if (selectedBranch !== 'ALL') {
+          const allowedLevels = branchLevelMap[selectedBranch] || [];
+          matchBranch = allowedLevels.includes(c.level);
+        }
+
+        // กรองตามระดับชั้น
+        let matchLevel = true;
+        if (selectedLevel !== 'ALL') {
+          matchLevel = (c.level === selectedLevel);
+        }
+
+        // กรองตามกลุ่มเรียน (ปวช.)
+        let matchGroup = true;
+        if (selectedGroup !== 'ALL' && c.group !== null) {
+          matchGroup = (String(c.group) === String(selectedGroup));
+        }
+
+        // กรองตามสถานะการเลือก
+        const matchStatus = (status === 'ALL') ||
+          (status === 'ASSIGNED' && c.teacherId !== null) ||
+          (status === 'UNASSIGNED' && c.teacherId === null);
+
+        // กรองตามครูผู้สอนที่เลือกดู
+        const matchTeacher = (filterTeacherId === 'ALL') || (c.teacherId === filterTeacherId);
+
+        return matchSearch && matchBranch && matchLevel && matchGroup && matchStatus && matchTeacher;
+      });
+
+      document.getElementById('filterMatchCount').innerText = filtered.length;
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
+              <p class="text-sm">ไม่พบรายวิชาที่ตรงกับเงื่อนไขการค้นหาหรือกลุ่มเรียนที่เลือก</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      filtered.forEach((c, index) => {
+        const row = document.createElement('tr');
+        row.className = "hover:bg-blue-50/40 transition group";
+
+        const teacherOptions = teachers.map(t => `
+          <option value="${t.id}" ${c.teacherId === t.id ? 'selected' : ''}>
+            ${t.name} (เป้าหมาย ${t.targetHours} ชม.)
+          </option>
+        `).join('');
+
+        const categoryBadge = getCategoryBadge(c.category);
+        const isAssigned = c.teacherId !== null;
+
+        // Group Badge
+        const groupBadge = c.group ? `
+          <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold ${c.group === 1 ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-indigo-100 text-indigo-900 border border-indigo-300'}">
+            <i class="fa-solid fa-user-group mr-1 text-[9px]"></i> กลุ่ม ${c.group}
+          </span>
+        ` : '';
+
+        row.innerHTML = `
+          <td class="py-3 px-3 text-center text-xs text-slate-400 font-mono">${index + 1}</td>
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-medium text-slate-800 text-xs">${c.level}</span>
+              ${groupBadge}
+            </div>
+            <span class="block text-[10px] text-slate-400">ภาคเรียนที่ ${c.term}</span>
+          </td>
+          <td class="py-3 px-4 font-mono font-semibold text-xs text-blue-900">${c.code}</td>
+          <td class="py-3 px-4 font-medium text-slate-800 text-xs sm:text-sm">
+            ${c.name}
+            ${c.group ? `<span class="text-[11px] font-semibold text-slate-500 block sm:inline sm:ml-1">(กลุ่ม ${c.group})</span>` : ''}
+          </td>
+          <td class="py-3 px-2 text-center font-mono text-xs text-slate-600">${c.t}-${c.p}-${c.c}</td>
+          <td class="py-3 px-3 text-center">
+            <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${c.hours >= 8 ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-800'}">
+              ${c.hours}
+            </span>
+          </td>
+          <td class="py-3 px-3">${categoryBadge}</td>
+          <td class="py-3 px-4">
+            <select onchange="assignCourseTeacher(${c.id}, this.value)" class="w-full text-xs py-1.5 px-2.5 rounded-xl border ${isAssigned ? 'border-blue-300 bg-blue-50/50 text-blue-900 font-medium' : 'border-slate-200 bg-white text-slate-500'} focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="">-- เลือกครูผู้สอน --</option>
+              ${teacherOptions}
+            </select>
+          </td>
+          <td class="py-3 px-2 text-center">
+            ${isAssigned ? `
+              <button onclick="clearCourseTeacher(${c.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="ปลดผู้สอน">
+                <i class="fa-solid fa-user-xmark text-xs"></i>
+              </button>
+            ` : `
+              <span class="text-[11px] text-slate-300">-</span>
+            `}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ตารางสรุปข้อมูล (ชื่อครู, จำนวนรายวิชา, รหัสรายวิชา, ชื่อรายวิชา, ระดับชั้น/กลุ่ม, ท-ป-น, ชม.)
+    function renderSummaryTable() {
+      const tbody = document.getElementById('summaryTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const filterTeacher = document.getElementById('summaryTeacherFilter')?.value || 'ALL';
+      const filteredTeachers = teachers.filter(t => filterTeacher === 'ALL' || t.id === filterTeacher);
+
+      filteredTeachers.forEach((t, tIndex) => {
+        const tCourses = courses.filter(c => c.teacherId === t.id);
+        const courseCount = tCourses.length;
+
+        // กรณีที่ครูยังไม่มีรายวิชาที่ได้รับมอบหมาย
+        if (courseCount === 0) {
+          const row = document.createElement('tr');
+          row.className = "bg-white hover:bg-slate-50 transition border-b border-slate-200";
+          row.innerHTML = `
+            <td class="py-3.5 px-3 text-center font-mono text-slate-400 border-r border-slate-200">${tIndex + 1}</td>
+            <td class="py-3.5 px-4 border-r border-slate-200 font-bold text-slate-800">
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-user-tie text-blue-600 text-xs"></i>
+                ${t.name}
+              </div>
+              <div class="text-[11px] text-slate-400 font-normal">${t.expertise || 'ทั่วไป'}</div>
+            </td>
+            <td class="py-3.5 px-3 text-center border-r border-slate-200 font-semibold text-slate-400">0 วิชา</td>
+            <td colspan="5" class="py-3.5 px-4 text-center text-slate-400 italic bg-slate-50/50">
+              ยังไม่มีรายวิชาที่เลือก
+            </td>
+          `;
+          tbody.appendChild(row);
+          return;
+        }
+
+        // กรณีที่ครูมีรายวิชาที่สอน: แสดงข้อมูลรายวิชาเป็นตารางอย่างกระชับ
+        tCourses.forEach((c, cIndex) => {
+          const row = document.createElement('tr');
+          row.className = "hover:bg-blue-50/30 transition border-b border-slate-100";
+
+          const groupBadge = c.group ? `
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${c.group === 1 ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
+              กลุ่ม ${c.group}
+            </span>
+          ` : '';
+
+          let teacherTd = '';
+          let countTd = '';
+
+          // รวมแถวเฉพาะเซลล์ข้อมูลครูและจำนวนวิชา
+          if (cIndex === 0) {
+            teacherTd = `
+              <td rowspan="${courseCount}" class="py-3.5 px-4 border-r border-slate-200 bg-white align-top">
+                <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-user-tie text-blue-600 text-xs"></i>
+                  ${t.name}
+                </div>
+                <div class="text-[11px] text-slate-400 font-normal mt-0.5">${t.expertise || 'ทั่วไป'}</div>
+              </td>
+            `;
+
+            countTd = `
+              <td rowspan="${courseCount}" class="py-3.5 px-3 text-center border-r border-slate-200 bg-white align-top">
+                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-xs border border-blue-200">
+                  ${courseCount} วิชา
+                </span>
+              </td>
+            `;
+          }
+
+          row.innerHTML = `
+            ${cIndex === 0 ? `<td rowspan="${courseCount}" class="py-3.5 px-3 text-center font-mono text-slate-400 border-r border-slate-200 bg-white align-top">${tIndex + 1}</td>` : ''}
+            ${teacherTd}
+            ${countTd}
+            <td class="py-2.5 px-3 font-mono font-semibold text-xs text-blue-900 border-r border-slate-200">${c.code}</td>
+            <td class="py-2.5 px-4 font-medium text-slate-800 border-r border-slate-200">
+              ${c.name}
+              ${c.group ? `<span class="text-slate-400 text-xs block sm:inline sm:ml-1">(กลุ่ม ${c.group})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-4 border-r border-slate-200">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs text-slate-700 font-medium">${c.level}</span>
+                ${groupBadge}
+              </div>
+            </td>
+            <td class="py-2.5 px-2 text-center font-mono text-xs text-slate-600 border-r border-slate-200">${c.t}-${c.p}-${c.c}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-xs text-slate-800">${c.hours}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function updateStatistics() {
+      const totalCourses = courses.length;
+      const totalHours = courses.reduce((sum, c) => sum + c.hours, 0);
+      const totalPvcHours = courses.filter(c => c.level.startsWith('ปวช')).reduce((sum, c) => sum + c.hours, 0);
+      const totalPvsHours = courses.filter(c => c.level.startsWith('ปวส')).reduce((sum, c) => sum + c.hours, 0);
+
+      const assigned = courses.filter(c => c.teacherId !== null);
+      const assignedCount = assigned.length;
+      const assignedHours = assigned.reduce((sum, c) => sum + c.hours, 0);
+      const assignedPvcHours = assigned.filter(c => c.level.startsWith('ปวช')).reduce((sum, c) => sum + c.hours, 0);
+      const assignedPvsHours = assigned.filter(c => c.level.startsWith('ปวส')).reduce((sum, c) => sum + c.hours, 0);
+
+      const unassignedCount = totalCourses - assignedCount;
+      const unassignedHours = totalHours - assignedHours;
+
+      document.getElementById('statTotalCourses').innerText = totalCourses;
+      document.getElementById('statTotalHours').innerText = totalHours;
+      const breakdownEl = document.getElementById('statLevelBreakdown');
+      if (breakdownEl) {
+        breakdownEl.innerText = `ปวช. ${totalPvcHours} ชม. | ปวส. ${totalPvsHours} ชม.`;
+      }
+
+      document.getElementById('statAssignedCourses').innerText = assignedCount;
+      const percent = totalHours > 0 ? Math.round((assignedHours / totalHours) * 100) : 0;
+      document.getElementById('statAssignedHours').innerText = `${assignedHours} ชม. (${percent}%) [ปวช. ${assignedPvcHours} / ปวส. ${assignedPvsHours}]`;
+      document.getElementById('statUnassignedCourses').innerText = unassignedCount;
+      document.getElementById('statUnassignedHours').innerText = `${unassignedHours} ชม. เหลือจัด`;
+    }
+
+    function renderTeacherLoads() {
+      const container = document.getElementById('teacherLoadContainer');
+      container.innerHTML = '';
+
+      if (teachers.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-8 text-center text-slate-400">
+            <i class="fa-solid fa-users text-3xl mb-2 text-slate-300"></i>
+            <p class="text-sm">ยังไม่มีข้อมูลครูผู้สอนในระบบ คลิก "จัดการครูผู้สอน" เพื่อเพิ่มรายชื่อ</p>
+          </div>
+        `;
+        return;
+      }
+
+      teachers.forEach(t => {
+        const teacherCourses = courses.filter(c => c.teacherId === t.id);
+        const curHours = teacherCourses.reduce((sum, c) => sum + c.hours, 0);
+        const pvcHours = teacherCourses.filter(c => c.level.startsWith('ปวช')).reduce((sum, c) => sum + c.hours, 0);
+        const pvsHours = teacherCourses.filter(c => c.level.startsWith('ปวส')).reduce((sum, c) => sum + c.hours, 0);
+        const percent = Math.min(100, Math.round((curHours / (t.targetHours || 28)) * 100));
+
+        let statusBg = 'bg-amber-500';
+        let statusText = 'ยังไม่ครบ';
+        let statusBadgeClass = 'bg-amber-100 text-amber-800';
+
+        if (curHours >= t.targetHours - 2 && curHours <= t.targetHours + 2) {
+          statusBg = 'bg-emerald-500';
+          statusText = 'เหมาะสม';
+          statusBadgeClass = 'bg-emerald-100 text-emerald-800';
+        } else if (curHours > t.targetHours + 2) {
+          statusBg = 'bg-rose-500';
+          statusText = 'เกินเกณฑ์';
+          statusBadgeClass = 'bg-rose-100 text-rose-800';
+        }
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-50 border border-slate-200/80 rounded-2xl p-3 hover:shadow-sm transition flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start gap-1.5 mb-1.5">
+              <div class="min-w-0">
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5 truncate">
+                  <i class="fa-solid fa-user-tie text-blue-600 text-xs shrink-0"></i>
+                  <span class="truncate">${t.name}</span>
+                </h3>
+                <p class="text-[10px] text-slate-400 truncate max-w-[190px]" title="${t.expertise || ''}">
+                  ${t.expertise || 'ไม่ได้ระบุ'}
+                </p>
+              </div>
+              <span class="badge-pill ${statusBadgeClass} text-[10px] shrink-0 font-medium">
+                ${statusText}
+              </span>
+            </div>
+
+            <div class="space-y-1.5 my-1.5">
+              <div class="flex justify-between text-[11px] font-semibold">
+                <span class="text-slate-600">ภาระรวม: <strong class="text-blue-700 font-bold">${curHours}</strong> / ${t.targetHours} ชม.</span>
+                <span class="text-slate-500">${teacherCourses.length} วิชา</span>
+              </div>
+
+              <!-- รายละเอียดชั่วโมง ปวช. และ ปวส. -->
+              <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-sky-50 border border-sky-100 text-sky-900">
+                  <span class="text-sky-700 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-school text-[9px]"></i> ปวช.
+                  </span>
+                  <span class="font-bold">${pvcHours} ชม.</span>
+                </div>
+                <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-900">
+                  <span class="text-indigo-700 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-graduation-cap text-[9px]"></i> ปวส.
+                  </span>
+                  <span class="font-bold">${pvsHours} ชม.</span>
+                </div>
+              </div>
+
+              <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                <div class="${statusBg} h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-1.5 border-t border-slate-200/60 flex justify-between items-center text-[11px] mt-1">
+            <button onclick="quickFilterByTeacher('${t.id}')" class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 text-[11px]">
+              <i class="fa-solid fa-list-check"></i> ดูวิชาที่สอน
+            </button>
+            <span class="text-[10px] text-slate-400 font-semibold">${percent}%</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function getCategoryBadge(category) {
+      if (category.includes('พื้นฐาน')) {
+        return `<span class="badge-pill bg-sky-100 text-sky-800 text-[10px]">วิชาชีพพื้นฐาน</span>`;
+      } else if (category.includes('เฉพาะ')) {
+        return `<span class="badge-pill bg-indigo-100 text-indigo-800 text-[10px]">วิชาชีพเฉพาะ</span>`;
+      } else if (category.includes('เลือกเสรี')) {
+        return `<span class="badge-pill bg-amber-100 text-amber-800 text-[10px]">เลือกเสรี</span>`;
+      } else if (category.includes('ปรับพื้นฐาน')) {
+        return `<span class="badge-pill bg-rose-100 text-rose-800 text-[10px]">ปรับพื้นฐาน</span>`;
+      } else if (category.includes('โครงงาน')) {
+        return `<span class="badge-pill bg-purple-100 text-purple-800 text-[10px]">โครงงาน</span>`;
+      }
+      return `<span class="badge-pill bg-slate-100 text-slate-800 text-[10px]">${category}</span>`;
+    }
+
+    // มอบหมายครูผู้สอนให้รายวิชา
+    function assignCourseTeacher(courseId, teacherId) {
+      const course = courses.find(c => c.id === courseId);
+      if (!course) return;
+
+      course.teacherId = teacherId || null;
+      updateStatistics();
+      renderTeacherLoads();
+      renderCoursesTable();
+
+      if (teacherId) {
+        const teacher = teachers.find(t => t.id === teacherId);
+        showToast(`มอบหมายวิชา "${course.name}" ให้ ${teacher ? teacher.name : ''} แล้ว`);
+      }
+    }
+
+    function clearCourseTeacher(courseId) {
+      const course = courses.find(c => c.id === courseId);
+      if (!course) return;
+      course.teacherId = null;
+      updateStatistics();
+      renderTeacherLoads();
+      renderCoursesTable();
+      showToast(`ปลดผู้สอนของวิชา "${course.name}" แล้ว`);
+    }
+
+    function quickFilterByTeacher(teacherId) {
+      filterTeacherId = teacherId;
+      document.getElementById('statusFilter').value = 'ALL';
+      renderCoursesTable();
+      const teacher = teachers.find(t => t.id === teacherId);
+      if (teacher) {
+        showToast(`แสดงรายวิชาที่ ${teacher.name} ได้รับมอบหมาย`);
+      }
+    }
+
+    function clearTeacherFilter() {
+      filterTeacherId = 'ALL';
+      renderCoursesTable();
+    }
+
+    function exportToExcel() {
+      // สร้าง CSV พร้อม UTF-8 BOM สำหรับเปิดใน Microsoft Excel ภาษาไทยได้ทันที
+      let csvContent = "\uFEFFลำดับ,ระดับชั้น,กลุ่มเรียน,ภาคเรียน,รหัสวิชา,ชื่อวิชา,ทฤษฎี,ปฏิบัติ,หน่วยกิต,ชั่วโมงสอนต่อสัปดาห์,กลุ่มวิชา,ครูผู้สอน\n";
+
+      courses.forEach((c, index) => {
+        const teacher = teachers.find(t => t.id === c.teacherId);
+        const teacherName = teacher ? teacher.name : "ยังไม่มีผู้สอน";
+        const groupStr = c.group ? `กลุ่ม ${c.group}` : "ปกติ";
+        const cleanName = `"${c.name.replace(/"/g, '""')}"`;
+        const cleanLevel = `"${c.level.replace(/"/g, '""')}"`;
+        csvContent += `${index + 1},${cleanLevel},${groupStr},${c.term},${c.code},${cleanName},${c.t},${c.p},${c.c},${c.hours},"${c.category}","${teacherName}"\n`;
+      });
+
+      // สรุปภาระงานสอนครูผู้สอนรายบุคคลแนบท้าย
+      csvContent += "\n\nสรุปภาระงานสอนครูผู้สอนรายบุคคล (Teaching Load Summary)\n";
+      csvContent += "ลำดับ,ชื่อครูผู้สอน,เป้าหมาย (ชม.),ชั่วโมงสอน ปวช.,ชั่วโมงสอน ปวส.,รวมชั่วโมงสอนจริง,จำนวนวิชาที่สอน,สถานะ\n";
+      teachers.forEach((t, i) => {
+        const tCourses = courses.filter(c => c.teacherId === t.id);
+        const curHours = tCourses.reduce((sum, c) => sum + c.hours, 0);
+        const pvcH = tCourses.filter(c => c.level.startsWith('ปวช')).reduce((sum, c) => sum + c.hours, 0);
+        const pvsH = tCourses.filter(c => c.level.startsWith('ปวส')).reduce((sum, c) => sum + c.hours, 0);
+        let status = "ยังไม่ครบเป้าหมาย";
+        if (curHours >= t.targetHours - 2 && curHours <= t.targetHours + 2) status = "เหมาะสม";
+        else if (curHours > t.targetHours + 2) status = "เกินเกณฑ์";
+        csvContent += `${i + 1},"${t.name}",${t.targetHours},${pvcH},${pvsH},${curHours},${tCourses.length},"${status}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ตารางภาระงานสอน_แผนกคอมพิวเตอร์_เทอม2.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("ดาวน์โหลดไฟล์ตารางสอนเรียบร้อยแล้ว");
+    }
+
+    function loadSampleTeachers() {
+      teachers = [
+        { id: 'T1', name: 'อ.สมศักดิ์', targetHours: 28, expertise: 'เทคโนโลยีคอมพิวเตอร์ / ฮาร์ดแวร์' },
+        { id: 'T2', name: 'อ.ราเชน', targetHours: 28, expertise: 'ระบบเครือข่าย / IoT' },
+        { id: 'T3', name: 'อ.อภิชิต', targetHours: 28, expertise: 'การเขียนโปรแกรม / AI' },
+        { id: 'T4', name: 'อ.วัฒนา', targetHours: 28, expertise: 'ระบบปฏิบัติการ / Linux / Server' },
+        { id: 'T5', name: 'อ.เนตรนภา', targetHours: 28, expertise: 'การพัฒนาเว็บ / ฐานข้อมูล' },
+        { id: 'T6', name: 'อ.ลลิตา', targetHours: 28, expertise: 'คอมพิวเตอร์กราฟิก / มัลติมีเดีย' },
+        { id: 'T7', name: 'อ.ทัศนัย', targetHours: 28, expertise: 'ไมโครคอนโทรลเลอร์ / สมองกลฝังตัว' },
+        { id: 'T8', name: 'อ.นัฐอนันต์', targetHours: 28, expertise: 'คอมเกมและแอนิเมชัน / 3D' },
+        { id: 'T9', name: 'อ.พีรภัทร', targetHours: 28, expertise: 'การถ่ายภาพ / วิดีโอคอนเทนต์' },
+        { id: 'T10', name: 'อ.อรปรียา', targetHours: 28, expertise: 'การออกแบบศิลปกรรม / โมชั่นกราฟิก' },
+        { id: 'T11', name: 'อ.อิทธพล', targetHours: 28, expertise: 'หุ่นยนต์ / งานบริการคอมพิวเตอร์' }
+      ];
+      renderTeachersInModal();
+      updateAllViews();
+      showToast("รีเซ็ตรายชื่อครูทั้ง 11 ท่าน (เป้าหมาย 28 ชม.) เรียบร้อยแล้ว");
+    }
+
+    function updateAllViews() {
+      updateStatistics();
+      renderTeacherLoads();
+      renderCoursesTable();
+      renderTeachersInModal();
+      populateSummaryTeacherFilter();
+      renderSummaryTable();
+      document.getElementById('teacherCountBadge').innerText = teachers.length;
+    }
+
+    function openTeacherModal() {
+      renderTeachersInModal();
+      document.getElementById('teacherModal').classList.remove('hidden');
+    }
+
+    function closeTeacherModal() {
+      document.getElementById('teacherModal').classList.add('hidden');
+    }
+
+    function renderTeachersInModal() {
+      const container = document.getElementById('teachersModalList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (teachers.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 text-center text-xs text-slate-400">
+            ยังไม่มีรายชื่อครูในระบบ
+          </div>
+        `;
+        return;
+      }
+
+      teachers.forEach((t, idx) => {
+        const tCourses = courses.filter(c => c.teacherId === t.id);
+        const curHours = tCourses.reduce((sum, c) => sum + c.hours, 0);
+        const pvcH = tCourses.filter(c => c.level.startsWith('ปวช')).reduce((sum, c) => sum + c.hours, 0);
+        const pvsH = tCourses.filter(c => c.level.startsWith('ปวส')).reduce((sum, c) => sum + c.hours, 0);
+
+        const item = document.createElement('div');
+        item.className = 'p-3 flex items-center justify-between gap-2 hover:bg-slate-50 transition';
+        item.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+              ${idx + 1}
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-slate-800 text-xs truncate">${t.name}</div>
+              <div class="text-[10px] text-slate-400 truncate">${t.expertise || 'ไม่ได้ระบุ'}</div>
+              <div class="text-[10px] text-blue-600 font-medium">สอนแล้ว ${curHours}/${t.targetHours} ชม. (ปวช. ${pvcH} / ปวส. ${pvsH})</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="promptDeleteTeacher('${t.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="ลบครูผู้สอน">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addNewTeacher() {
+      const nameInput = document.getElementById('newTeacherName');
+      const targetInput = document.getElementById('newTeacherTarget');
+      const expInput = document.getElementById('newTeacherExpertise');
+
+      const name = nameInput.value.trim();
+      const targetHours = parseInt(targetInput.value, 10) || 28;
+      const expertise = expInput.value.trim();
+
+      if (!name) {
+        showToast('กรุณาระบุชื่อครูผู้สอน', 'error');
+        return;
+      }
+
+      const newId = 'T' + (Date.now() % 100000);
+      teachers.push({
+        id: newId,
+        name: name,
+        targetHours: targetHours,
+        expertise: expertise
+      });
+
+      nameInput.value = '';
+      expInput.value = '';
+      targetInput.value = 28;
+
+      renderTeachersInModal();
+      updateAllViews();
+      showToast(`เพิ่ม "${name}" เข้าสู่ระบบเรียบร้อยแล้ว`);
+    }
+
+    function promptDeleteTeacher(teacherId) {
+      const teacher = teachers.find(t => t.id === teacherId);
+      if (!teacher) return;
+
+      openConfirmModal(
+        `ลบครูผู้สอน "${teacher.name}"?`,
+        `หากลบ รายวิชาที่ครูท่านนี้ได้รับมอบหมายจะถูกปลดเป็นวิชาที่ยังไม่มีผู้สอนทันที`,
+        () => {
+          courses.forEach(c => {
+            if (c.teacherId === teacherId) c.teacherId = null;
+          });
+          teachers = teachers.filter(t => t.id !== teacherId);
+          renderTeachersInModal();
+          updateAllViews();
+          showToast(`ลบ "${teacher.name}" ออกจากระบบแล้ว`);
+        }
+      );
+    }
+
+    function openConfirmModal(title, desc, onConfirm) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalDesc').innerText = desc;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal(confirmed) {
+      document.getElementById('confirmModal').classList.add('hidden');
+      if (confirmed && typeof pendingConfirmAction === 'function') {
+        pendingConfirmAction();
+      }
+      pendingConfirmAction = null;
+    }
+
+    function resetAllAssignmentsPrompt() {
+      openConfirmModal(
+        "รีเซ็ตการเลือกวิชาทั้งหมด?",
+        "รายวิชาทั้งหมดจะถูกปลดผู้สอนออก คุณสามารถจัดตารางใหม่อีกครั้งได้ทันที",
+        () => {
+          courses.forEach(c => c.teacherId = null);
+          updateAllViews();
+          showToast("รีเซ็ตการเลือกรายวิชาทั้งหมดเรียบร้อยแล้ว");
+        }
+      );
+    }
+
+    let toastTimeout = null;
+    function showToast(msg, type = "success") {
+      const toast = document.getElementById('toastNotification');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMessage.innerText = msg;
+      if (type === "error") {
+        toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400 text-base";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
